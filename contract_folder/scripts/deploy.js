@@ -24,23 +24,27 @@ async function main() {
   // 4. Add initial liquidity to the exchange
   console.log("\nAdding initial liquidity...");
   const [deployer] = await hre.ethers.getSigners();
-  const initialLiquidityA = hre.ethers.parseEther("1000"); // 1000 NEXA
-  const initialLiquidityB = hre.ethers.parseEther("500");  // 500 NEXB
+  const initialLiquidityA = hre.ethers.parseEther("1000");
+  const initialLiquidityB = hre.ethers.parseEther("500");
 
-  // Approve the exchange to spend the deployer's tokens
-  await nexusTokenA.connect(deployer).approve(exchange.target, initialLiquidityA);
-  await nexusTokenB.connect(deployer).approve(exchange.target, initialLiquidityB);
-  console.log("Tokens approved by deployer.");
- const balanceA = await nexusTokenA.balanceOf(deployer.address);
-  const balanceB = await nexusTokenB.balanceOf(deployer.address);
-  console.log(`Deployer's NEXA balance: ${hre.ethers.formatEther(balanceA)}`);
-  console.log(`Deployer's NEXB balance: ${hre.ethers.formatEther(balanceB)}`);
-  console.log(`Attempting to add 1000 NEXA and 500 NEXB to liquidity...`);
+  // =================================================================
+  // THE FIX IS HERE: Add .wait() to each approval
+  // =================================================================
+  console.log("Approving NEXA spend...");
+  const approveATx = await nexusTokenA.connect(deployer).approve(exchange.target, initialLiquidityA);
+  await approveATx.wait(); // <-- WAIT FOR CONFIRMATION
+  console.log("✅ NEXA approval confirmed.");
+
+  console.log("Approving NEXB spend...");
+  const approveBTx = await nexusTokenB.connect(deployer).approve(exchange.target, initialLiquidityB);
+  await approveBTx.wait(); // <-- WAIT FOR CONFIRMATION
+  console.log("✅ NEXB approval confirmed.");
   // =================================================================
 
   // Call the addLiquidity function
+  console.log("Calling addLiquidity...");
   const tx = await exchange.connect(deployer).addLiquidity(initialLiquidityA, initialLiquidityB);
-  await tx.wait();
+  await tx.wait(); // Wait for the liquidity transaction itself to be mined
 
   console.log(`🎉 Liquidity added successfully! Initial price: 1 NEXA = 0.5 NEXB`);
   console.log("\nDeployment complete!");
