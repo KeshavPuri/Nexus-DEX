@@ -10,7 +10,7 @@ contract Exchange {
     uint256 public reserveA;
     uint256 public reserveB;
 
-    IERC20 public lpToken; // A token representing liquidity provider shares
+    IERC20 public lpToken; 
 
     constructor(address _tokenA, address _tokenB, address _lpToken) {
         tokenA = _tokenA;
